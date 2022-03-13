@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\MessageSend;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -41,4 +42,17 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function sendMessageTo(User $to, string $message)
+    {
+        MessageSend::dispatch($this, $to, $message);
+    }
+
+    public function getChatLogWith(User $user)
+    {
+        return Message::where(fn ($q) => $q->where('from_user', $user->id)->where('to_user', $this->id))
+            ->orWhere(fn ($q) => $q->where('from_user', $this->id)->where('to_user', $user->id))
+            ->orderBy('created_at')
+            ->get();
+    }
 }

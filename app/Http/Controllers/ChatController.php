@@ -12,7 +12,18 @@ class ChatController extends Controller
     {
         return inertia('Main', [
             'users' => User::whereNot('id', Auth::user()->id)->get(),
+            'chatlog' => Auth::user()->getChatLogWith($user),
         ]);
     }
 
+    public function sendMessage(Request $request)
+    {
+        $message = $request->input('message', '');
+        $userId = $request->input('to');
+        $userTo = User::findOrFail($userId);
+        if (strlen($message)) {
+            Auth::user()->sendMessageTo($userTo, $message);
+        }
+        return response()->noContent();
+    }
 }

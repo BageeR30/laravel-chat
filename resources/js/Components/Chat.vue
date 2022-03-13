@@ -3,26 +3,14 @@
         <div class="border rounded">
             <div>
                 <div class="w-full">
-                    <div class="relative w-full p-6 overflow-y-auto h-[70vh]">
+                    <div id='chat' class="relative w-full p-6 overflow-y-auto h-[70vh]">
                         <ul class="space-y-2">
-                            <li class="flex justify-start">
-                                <div class="relative max-w-xl px-4 py-2 text-gray-700 rounded shadow">
-                                    <span class="block">test</span>
-                                </div>
-                            </li>
-                            <li class="flex justify-start">
-                                <div class="relative max-w-xl px-4 py-2 text-gray-700 rounded shadow">
-                                    <span class="block">
-                                        Lorem ipsum dolor sit, amet consectetur adipisicing elit.Lorem ipsum dolor sit, amet consectetur adipisicing elit.Lorem ipsum dolor sit, amet consectetur adipisicing elit.Lorem ipsum dolor sit, amet consectetur adipisicing elit.Lorem ipsum dolor sit, amet consectetur adipisicing elit.Lorem ipsum dolor sit, amet consectetur adipisicing elit.Lorem ipsum dolor sit, amet consectetur adipisicing elit.Lorem ipsum dolor sit, amet consectetur adipisicing elit.Lorem ipsum dolor sit, amet consectetur adipisicing elit.Lorem ipsum dolor sit, amet consectetur adipisicing elit.Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-                                    </span>
-                                </div>
-                            </li>
                             <li
                                 v-for="(msg, index) in chatlog" :key="index"
-                                class="flex justify-end"
-                                :class="'justify-' + (msg.from_user != user_id ? 'end' : 'start')"
+                                class="flex"
+                                :class="'justify-' + (msg.from_user == user_id ? 'end' : 'start')"
                             >
-                                <div class="relative max-w-xl px-4 py-2 text-gray-700 bg-blue-200 rounded shadow" :class="{'bg-blue-200': msg.from_user != user_id}">
+                                <div class="relative max-w-xl px-4 py-2 text-gray-700 rounded shadow" :class="{'bg-blue-200': msg.from_user == user_id}">
                                     <span class="block">
                                         {{ msg.text }}
                                     </span>
@@ -57,7 +45,7 @@
 </template>
 
 <script>
-
+import axios from "axios";
 export default {
     data() {
         return {
@@ -73,18 +61,40 @@ export default {
         }
     },
     created() {
-        
+        Echo.private("chat." + this.$page.props.auth.user.id).listen(
+            "MessageSend",
+            (e) => {
+                this.addMessage({text: e.message, from_user: e.user_from.id});
+            }
+        );
+    },
+    mounted() {
+        this.scrollToBottom()
+    },
+    updated() {
+        this.scrollToBottom()
     },
     methods: {
         addMessage(msg) {
-            console.log(msg);
             this.chatlog.push(msg);
         },
         sendMessage() {
             if (this.message == '') return
-            this.addMessage({text: this.message, from_user: this.user_id});
-            this.message = '';
+            axios.post("/message", {
+                    to: window.location.href.split("/").pop(),
+                    message: this.message,
+                })
+                .then((res) => {
+                    if (res.status === 204) 
+                        this.addMessage({text: this.message, from_user: this.user_id});
+                })
+                .then(() => (this.message = ''));
         },
+        scrollToBottom() {
+            let chat = document.getElementById('chat');
+            chat.scrollTop = chat.scrollHeight;
+        },
+
     },
 };
 </script>

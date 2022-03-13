@@ -21,5 +21,6 @@ Route::get('/', function () {
 });
 
 Route::get('/main/{user?}', [ChatController::class, 'index'])->middleware('auth')->name('main');
+Route::post('/message', [ChatController::class, 'sendMessage'])->middleware('auth');
 
 require __DIR__.'/auth.php';
