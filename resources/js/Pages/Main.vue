@@ -22,7 +22,7 @@ import { Head, Link } from "@inertiajs/inertia-vue3";
                 <div class="h-[70vh] overflow-y-auto py-4 px-3 bg-gray-50 rounded" scroll-region>
                     <ul class="space-y-2">
 
-                        <li v-for="user in users" v-bind:key="user.id">
+                        <li v-for="user in sortedUsers" v-bind:key="user.id">
                             <Link 
                                 :class="{'bg-blue-200': $page.url.split('/').pop() == user.id }"
                                 :href="route('main', user.id)"
@@ -31,7 +31,8 @@ import { Head, Link } from "@inertiajs/inertia-vue3";
                                 preserve-state
                             >
                                 <svg
-                                    class="flex-shrink-0 w-6 h-6 text-green-500 transition duration-75 group-hover:text-gray-900"
+                                    class="flex-shrink-0 w-6 h-6  transition duration-75 group-hover:text-gray-900"
+                                    :class="user.online ? 'text-green-500' : 'text-red-500'"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -50,7 +51,7 @@ import { Head, Link } from "@inertiajs/inertia-vue3";
                 </div>
             </aside>
 
-            <chat :chatlog="chatlog" />
+            <chat :chatlog="chatlog" :online='online' />
 
         </div>
     </BreezeAuthenticatedLayout>
@@ -61,8 +62,39 @@ import Chat from "../Components/Chat.vue";
 export default {
     components: { Chat },
     props: {
-        users: Object,
+        users: Array,
         chatlog: Array
     },
+    data() {
+        return {
+            online: new Set()
+        }
+    },
+    created() {
+        Echo.join('users.all')
+            .here((users) => {
+                this.online = new Set(users.map((el) => el.id));
+            })
+            .joining((user) => {
+                this.online.add(user.id);
+                this.$forceUpdate();
+            })
+            .leaving((user) => {
+                this.online.delete(user.id);
+                this.$forceUpdate();
+            })
+            .error((error) => {
+                console.error(error);
+            });
+    },
+    computed: {
+        sortedUsers() {
+            this.users.map(user => {
+                user.online = this.online.has(user.id);
+            });
+            this.users.sort((a,b) => a.online > b.online ? -1 : 1);
+            return this.users;
+        }
+    }
 };
 </script>

@@ -54,11 +54,11 @@ export default {
         };
     },
     props: {
-        to_user: Object,
         chatlog: {
             type:Array,
             default: []
-        }
+        },
+        online: new Set()
     },
     created() {
         Echo.private("chat." + this.$page.props.auth.user.id).listen(
@@ -81,9 +81,11 @@ export default {
         },
         sendMessage() {
             if (this.message == '') return
+            const to_user = window.location.href.split("/").pop();
             axios.post("/message", {
-                    to: window.location.href.split("/").pop(),
+                    to: to_user,
                     message: this.message,
+                    send_email: !this.online.has(parseInt(to_user)),
                 })
                 .then((res) => {
                     if (res.status === 204) 
@@ -95,30 +97,6 @@ export default {
             let chat = document.getElementById('chat');
             chat.scrollTop = chat.scrollHeight;
         },
-
     },
 };
 </script>
-
-<style>
-.scrollbar-w-2::-webkit-scrollbar {
-    width: 0.25rem;
-    height: 0.25rem;
-}
-
-.scrollbar-track-blue-lighter::-webkit-scrollbar-track {
-    --bg-opacity: 1;
-    background-color: #f7fafc;
-    background-color: rgba(247, 250, 252, var(--bg-opacity));
-}
-
-.scrollbar-thumb-blue::-webkit-scrollbar-thumb {
-    --bg-opacity: 1;
-    background-color: #edf2f7;
-    background-color: rgba(237, 242, 247, var(--bg-opacity));
-}
-
-.scrollbar-thumb-rounded::-webkit-scrollbar-thumb {
-    border-radius: 0.25rem;
-}
-</style>
