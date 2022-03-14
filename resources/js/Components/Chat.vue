@@ -64,7 +64,8 @@ export default {
         Echo.private("chat." + this.$page.props.auth.user.id).listen(
             "MessageSend",
             (e) => {
-                this.addMessage({text: e.message, from_user: e.user_from.id});
+                if (e.user_from.id == window.location.href.split("/").pop())
+                    this.addMessage({text: e.message, from_user: e.user_from.id});
             }
         );
     },
