@@ -26,7 +26,7 @@ class ChatController extends Controller
         if (strlen($message)) {
             Auth::user()->sendMessageTo($userTo, $message);
         }
-        if ($request->input('send_email', false)) {
+        if ($request->input('send_email', false)) { //TODO:check presence by webhook from pusher
             Mail::to($userTo)->queue(new Notification(Auth::user()));
         }
         return response()->noContent();
