@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class ChatController extends Controller
 {
@@ -23,6 +25,9 @@ class ChatController extends Controller
         $userTo = User::findOrFail($userId);
         if (strlen($message)) {
             Auth::user()->sendMessageTo($userTo, $message);
+        }
+        if ($request->input('send_email', false)) {
+            Mail::to($userTo)->queue(new Notification(Auth::user()));
         }
         return response()->noContent();
     }
